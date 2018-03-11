@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Project>
-<ProjectName>C:\Users\Yegor\Documents\GitHub\zx_stm32f7_ltdc\zx_stm32f7_ltdc\zx_stm32f7_ltdc\\zx_stm32f7_ltdc</ProjectName>
+<ProjectName>C:\Users\Yegor\Documents\GitHub\zx_stm32f7_ltdc\zx_stm32f7_ltdc\\zx_stm32f7_ltdc</ProjectName>
 <CMSIS>..\Drivers\CMSIS</CMSIS>
 <HAL_Driver>C:\Users\Yegor\STM32Cube\Repository\STM32Cube_FW_F7_V1.8.0\Drivers\CMSIS</HAL_Driver>
 
@@ -32,7 +32,7 @@
     <usedDebug>true</usedDebug>
     	<debugprobe></debugprobe>
     <optimization>6</optimization>
-    <icfloc>1</icfloc>
+    <icfloc>2</icfloc>
     <Adefines>
         <define></define>
     </Adefines>   
