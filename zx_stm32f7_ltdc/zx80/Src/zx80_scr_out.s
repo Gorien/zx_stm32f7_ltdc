@@ -18,6 +18,7 @@
 .equ DMA_S1PAR, 0x0030
 .equ DMA_S1M0AR, 0x0034
 .equ DMA_LIFCR, 0x0008
+.equ TIM13_BASE, 0x40001c00
 
 .equ enable, 1
 .equ disable, 0
@@ -26,16 +27,17 @@
 .extern memory //pointer to memory and data array
 .extern screenn_data
 .extern screen1_buf//INT_SCR //interrupt for z80, 50Hz
-.extern scr_byte_counter
+//.extern INT_SCR
 
 zx80_screen:
 			b reg_init
 loop:
-			ldrh r0, [r12]
-			cmp r0, #4
-			blt loop
-			sbc r0, #4
-			strh r0, [r12]
+			ldrb r0, [r12, #0x10]
+			tst r0, #1
+			beq loop
+			strb r9, [r12, #0x10]
+
+loop1:
 
 
 			tbh [pc, r4]
@@ -30794,7 +30796,7 @@ count:
 			add r3, #1
 			add r4, #1
 			cmp r4, #6144
-			bne loop
+			bne loop1
 			mov r4, #0
 			b loop
 
@@ -30808,7 +30810,7 @@ reg_init: //initialization of registers with addresses of memory and peripherals
 			ldr r9, =disable
 			ldr r10, =enable
 			ldr r11, =DMA2_BASE
-			ldr r12, =scr_byte_counter
+			ldr r12, =TIM13_BASE
 			//ldr r12, =TIM11_BB_SR_UIF
 
 			str r8, [r11, #0x0028] //first transmit for set flag TCIF (transmit complete)

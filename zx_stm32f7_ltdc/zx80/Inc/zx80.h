@@ -19,9 +19,10 @@ extern uint8_t const ROM[16384];
 extern uint8_t INT_SCR;
 extern uint8_t port_rf;
 extern uint16_t border;
-extern uint16_t scr_byte_counter;
 
-extern volatile uint16_t screen1_buf[49152];
+
+//extern volatile uint16_t screen1_buf[49152];
+extern uint16_t screen1_buf[49152];
 extern uint16_t scr_byte_counter;
 
 void zx80_Init(void);

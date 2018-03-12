@@ -19,17 +19,15 @@
 //#include "ay_3_891x.h"
 
 
-volatile uint16_t screen1_buf[49152]={0x0000};
+//volatile uint16_t screen1_buf[49152]={0x0000};
+uint16_t screen1_buf[49152]={0x0000};
 
 uint16_t vector_nmi;
 uint8_t INT_SCR;
 uint8_t INT_mask;
-uint16_t scr_byte_counter=0;
-uint8_t timing;
-uint16_t line_counter=0;
-uint16_t column_counter=0;
 
-uint32_t border_color [8]={0x00000000, 0x000000c7, 0x00c70000, 0x00c700c7, 0x0000c300, 0x0000c3c7, 0x00c7c300, 0x00c7c3c7};
+
+uint32_t border_color [8]={0x00000000, 0x000000e7, 0x00e70000, 0x00e700e7, 0x0000e300, 0x0000e3e7, 0x00e7e300, 0x00e7e3e7};
 
 
 #include "zx80_memory.c"
@@ -50,6 +48,9 @@ uint32_t border_color [8]={0x00000000, 0x000000c7, 0x00c70000, 0x00c700c7, 0x000
 void zx80_Init(void)
 {
 	HAL_LTDC_SetAddress(&hltdc, (uint32_t)&screen1_buf, 0);
+	LTDC->LIPCR=0x004;
+	LTDC->IER|=LTDC_IER_LIE;
+
 
 	DMA2_Stream1->PAR=(uint32_t)&screen_data[7][255][0];
 	DMA2_Stream1->M0AR=(uint32_t)&screen1_buf[0];
@@ -96,9 +97,9 @@ void zx80_Reset(void)
 uint8_t zx80_Run(void)
 {
 	//noise=(RNG->DR)&0x00ff;
-	if((TIM13->SR&TIM_SR_UIF)&&INT_mask)
+	if((LTDC->ISR&LTDC_ISR_LIF)&&INT_mask)
 	{
-		TIM13->SR=DISABLE;
+		LTDC->ICR=LTDC_ICR_CLIF;
 		HAL_GPIO_TogglePin(GPIOB, LED_red_Pin);
 		halt=DISABLE;
 		if(IM)
@@ -108,27 +109,21 @@ uint8_t zx80_Run(void)
 			vector_nmi=(I*256)+255;
 			vector_nmi=(memory[vector_nmi+1]<<8)|memory[vector_nmi];
 			RST(vector_nmi);
-			timing=19;
-			scr_byte_counter+=timing;
-			return(timing);
+			return(19);
 		}
 		else
 		{
 			IFF1=0;
 			IFF2=0;
 			RST(0x38);
-			timing=13;
-			scr_byte_counter+=timing;
-			return(timing);
+			return(13);
 		}
 	}
 	INT_mask=IFF1;
 	opcode=memory[PC];
 	PC+=1;
 	R++;
-	timing=(*opcode_base[opcode])();
-	scr_byte_counter+=timing;
-	return(timing);
+	return(*opcode_base[opcode])();
 }
 
 uint8_t in(uint16_t port)

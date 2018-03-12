@@ -192,9 +192,8 @@ void TIM8_TRG_COM_TIM14_IRQHandler(void)
   /* USER CODE BEGIN TIM8_TRG_COM_TIM14_IRQn 0 */
 	uint8_t temp;
 	TIM14->SR=0;
-	temp=zx80_Run();
-	TIM14->CCR1+=temp;
-	scr_byte_counter+=temp;
+	TIM14->CCR1+=zx80_Run();
+
 
 
 	return;
