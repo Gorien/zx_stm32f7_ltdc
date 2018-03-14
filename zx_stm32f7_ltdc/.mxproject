@@ -1,7 +1,7 @@
 [PreviousGenFiles]
-HeaderPath=C:/Users/Beloussov/Documents/GitHub/zx_stm32f7_ltdc/zx_stm32f7_ltdc/Inc
+HeaderPath=C:/Users/Yegor/Documents/GitHub/zx_stm32f7_ltdc/zx_stm32f7_ltdc/Inc
 HeaderFiles=gpio.h;ltdc.h;stm32f7xx_it.h;stm32f7xx_hal_conf.h;main.h;rng.h;sdmmc.h;tim.h;dma.h;ffconf.h;bsp_driver_sd.h;sd_diskio.h;fatfs.h;
-SourcePath=C:/Users/Beloussov/Documents/GitHub/zx_stm32f7_ltdc/zx_stm32f7_ltdc/Src
+SourcePath=C:/Users/Yegor/Documents/GitHub/zx_stm32f7_ltdc/zx_stm32f7_ltdc/Src
 SourceFiles=gpio.c;ltdc.c;stm32f7xx_it.c;stm32f7xx_hal_msp.c;main.c;rng.c;sdmmc.c;tim.c;dma.c;bsp_driver_sd.c;sd_diskio.c;fatfs.c;
 
 [PreviousLibFiles]

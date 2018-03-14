@@ -34,6 +34,13 @@ uint8_t file_buf[0xff];
 uint16_t file_pointer;
 uint32_t memory_pointer;
 
+uint16_t i;
+uint16_t page_sithe;
+uint8_t compression_count;
+uint8_t compression_number;
+uint8_t compression_value;
+
+
 uint32_t number_byte;
 uint32_t total_read_byte;
 
@@ -91,9 +98,9 @@ void zx80_load(void)
     	}
     	else
     	{
-    		res=f_read(&SDFile, file_buf, 30, (void*)&total_read_byte);
+    		res=f_read(&SDFile, file_buf, 86, (void*)&total_read_byte);
 
-    		if((total_read_byte==0)||(total_read_byte!=30)||(res!=FR_OK))
+    		if((total_read_byte==0)||(total_read_byte!=86)||(res!=FR_OK))
     		{
     			Error_Handler();
     		}
@@ -110,8 +117,8 @@ void zx80_load(void)
     			L=file_buf[4];
     			H=file_buf[5];
 
-    			PCL=file_buf[6];
-    			PCH=file_buf[7];
+    			//PCL=file_buf[6];
+    			//PCH=file_buf[7];
 
     			SPL=file_buf[8];
     			SPH=file_buf[9];
@@ -162,64 +169,139 @@ void zx80_load(void)
     				IM=0;
     			}
 
-    			if((file_buf[12]&0x20)!=0)
+    			PCL=file_buf[32];
+    			PCH=file_buf[33];
+
+    			res=f_read(&SDFile, file_buf, 0xff, (void*)&total_read_byte);
+				if(res!=FR_OK)
+				{
+					Error_Handler();
+				}
+
+    			page_sithe=Next_Byte_File();
+    			page_sithe|=Next_Byte_File()<<8;
+
+    			memory_pointer=Next_Byte_File();
+    			if(memory_pointer==4)
     			{
-    				//compressed data
-    				file_pointer=0;
+    				memory_pointer=0x8000;
+    			}
+    			else if(memory_pointer==5)
+    			{
+    				memory_pointer=0xc000;
+    			}
+    			else if(memory_pointer==8)
+    			{
     				memory_pointer=0x4000;
+    			}
 
-    	    		res=f_read(&SDFile, file_buf, 0xff, (void*)&total_read_byte);
+    			for(i=0; i<page_sithe; i++)
+    			{
+	    			memory[memory_pointer]=Next_Byte_File();
+	    			memory_pointer++;
+	    			if (memory[memory_pointer-1]==0xed)
+	    			{
+	    				memory[memory_pointer]=Next_Byte_File();
+	    				i++;
+	    				memory_pointer++;
+	    				if (memory[memory_pointer-1]==0xed)
+	    				{
+	    					memory_pointer-=2;
+							compression_number=Next_Byte_File();
+							compression_value=Next_Byte_File();
+							i+=2;
+							for (compression_count=0; compression_count<compression_number; compression_count++)
+							{
+								memory[memory_pointer+compression_count]=compression_value;
+							}
+							memory_pointer=memory_pointer+compression_number;
+						}
+	    			}
+    			}
 
-    	    		if(res!=FR_OK)
-    	    		{
-    	    			Error_Handler();
-    	    		}
 
-    	    		while (1)
-    	    		{
+    			page_sithe=Next_Byte_File();
+    			page_sithe|=Next_Byte_File()<<8;
+
+    			memory_pointer=Next_Byte_File();
+    			if(memory_pointer==4)
+    			{
+    				memory_pointer=0x8000;
+    			}
+    			else if(memory_pointer==5)
+    			{
+    				memory_pointer=0xc000;
+    			}
+    			else if(memory_pointer==8)
+    			{
+    				memory_pointer=0x4000;
+    			}
+
+    			for(i=0; i<page_sithe; i++)
+    			{
+	    			memory[memory_pointer]=Next_Byte_File();
+	    			memory_pointer++;
+	    			if (memory[memory_pointer-1]==0xed)
+	    			{
+	    				memory[memory_pointer]=Next_Byte_File();
+	    				memory_pointer++;
+	    				i++;
+	    				if (memory[memory_pointer-1]==0xed)
+	    				{
+	    					memory_pointer-=2;
+							compression_number=Next_Byte_File();
+							compression_value=Next_Byte_File();
+							i+=2;
+							for (compression_count=0; compression_count<compression_number; compression_count++)
+							{
+								memory[memory_pointer+compression_count]=compression_value;
+							}
+							memory_pointer=memory_pointer+compression_number;
+						}
+	    			}
+    			}
+
+    			page_sithe=Next_Byte_File();
+    			page_sithe|=Next_Byte_File()<<8;
+
+    			memory_pointer=Next_Byte_File();
+    			if(memory_pointer==4)
+    			{
+    				memory_pointer=0x8000;
+    			}
+    			else if(memory_pointer==5)
+    			{
+    				memory_pointer=0xc000;
+    			}
+    			else if(memory_pointer==8)
+    			{
+    				memory_pointer=0x4000;
+    			}
+
+       			for(i=0; i<page_sithe; i++)
+        			{
     	    			memory[memory_pointer]=Next_Byte_File();
     	    			memory_pointer++;
+    	    			if (memory[memory_pointer-1]==0xed)
+    	    			{
+    	    				memory[memory_pointer]=Next_Byte_File();
+    	    				memory_pointer++;
+    	    				i++;
+    	    				if (memory[memory_pointer-1]==0xed)
+    	    				{
+    	    					memory_pointer-=2;
+    							compression_number=Next_Byte_File();
+    							compression_value=Next_Byte_File();
+    							i+=2;
+    							for (compression_count=0; compression_count<compression_number; compression_count++)
+    							{
+    								memory[memory_pointer+compression_count]=compression_value;
+    							}
+    							memory_pointer=memory_pointer+compression_number;
+    						}
+    	    			}
+        			}
 
-						if (memory[memory_pointer-1]==0xed)
-						{
-	    	    			memory[memory_pointer]=Next_Byte_File();
-	    	    			memory_pointer++;
-
-	    	    			if (memory[memory_pointer-1]==0xed)
-	    	    			{
-
-								memory_pointer-=2;
-
-								uint8_t compression_count;
-								uint8_t compression_number;
-								uint8_t compression_value;
-
-								compression_number=Next_Byte_File();
-
-								if ((compression_number==0)&&(memory[memory_pointer-1]==0))
-								{
-									//end file
-					    			HAL_GPIO_WritePin(GPIOB, LED_red_Pin, GPIO_PIN_SET);
-					    			f_close(&SDFile);
-					    			zx80_Init();
-								}
-
-
-								compression_value=Next_Byte_File();
-								for (compression_count=0; compression_count<compression_number; compression_count++)
-								{
-									memory[memory_pointer+compression_count]=compression_value;
-								}
-								memory_pointer=memory_pointer+compression_number;
-	    	    			}
-						}
-    	    		}
-    			}
-    			else
-    			{
-    				//uncompressed data
-    				Error_Handler();
-    			}
 
 
     			HAL_GPIO_WritePin(GPIOB, LED_red_Pin, GPIO_PIN_SET);
