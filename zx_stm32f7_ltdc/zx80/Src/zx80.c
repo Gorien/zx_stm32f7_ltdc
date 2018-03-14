@@ -11,6 +11,7 @@
 #include "stm32f7xx_hal.h"
 #include "tim.h"
 #include "ltdc.h"
+#include "fatfs.h"
 
 #include "zx80.h"
 #include "zx80_macros.h"
@@ -29,6 +30,17 @@ uint8_t INT_mask;
 
 uint32_t border_color [8]={0x00000000, 0x000000e7, 0x00e70000, 0x00e700e7, 0x0000e300, 0x0000e3e7, 0x00e7e300, 0x00e7e3e7};
 
+uint8_t file_buf[0xff];
+uint16_t file_pointer;
+uint32_t memory_pointer;
+
+uint32_t number_byte;
+uint32_t total_read_byte;
+
+FRESULT res;
+
+
+
 
 #include "zx80_memory.c"
 #include "zx80_registers.c"
@@ -43,6 +55,180 @@ uint32_t border_color [8]={0x00000000, 0x000000e7, 0x00e70000, 0x00e700e7, 0x000
 #include "zx80_opcodes_base.c"
 
 #include "zx80_scr_table.c"
+
+
+
+uint8_t Next_Byte_File(void)
+{
+	uint8_t value;
+	value=file_buf[file_pointer];
+
+	file_pointer++;
+	if(file_pointer==total_read_byte)
+	{
+		file_pointer=0;
+		res=f_read(&SDFile, file_buf, 0xff, (void*)&total_read_byte);
+		if(res!=FR_OK)
+		{
+			Error_Handler();
+		}
+	}
+	return (value);
+}
+
+void zx80_load(void)
+{
+	if(f_mount(&SDFatFS, (TCHAR const*)SDPath, 0) != FR_OK)
+    {
+      Error_Handler();
+    }
+    else
+    {
+    	if(f_open(&SDFile, "exolon.z80", FA_READ) != FR_OK)
+    	//if(f_open(&SDFile, "mywrite.txt", FA_CREATE_ALWAYS | FA_WRITE) != FR_OK)
+    	{
+    		Error_Handler();
+    	}
+    	else
+    	{
+    		res=f_read(&SDFile, file_buf, 30, (void*)&total_read_byte);
+
+    		if((total_read_byte==0)||(total_read_byte!=30)||(res!=FR_OK))
+    		{
+    			Error_Handler();
+    		}
+    		else
+    		{
+
+
+    			A=file_buf[0];
+    			F=file_buf[1];
+
+    			C=file_buf[2];
+    			B=file_buf[3];
+
+    			L=file_buf[4];
+    			H=file_buf[5];
+
+    			PCL=file_buf[6];
+    			PCH=file_buf[7];
+
+    			SPL=file_buf[8];
+    			SPH=file_buf[9];
+
+    			I=file_buf[10];
+
+    			R7=R=file_buf[11]&0x7f;
+    			R|=file_buf[12]<<7;
+
+    			LTDC->BCCR=border_color[(file_buf[12]&0x0e)>>1];
+
+    			E=file_buf[13];
+    			D=file_buf[14];
+
+    			C_=file_buf[15];
+    			B_=file_buf[16];
+
+    			E_=file_buf[17];
+    			D_=file_buf[18];
+
+    			L_=file_buf[19];
+    			H_=file_buf[20];
+
+    			A_=file_buf[21];
+    			F_=file_buf[22];
+
+    			IYL=file_buf[23];
+    			IYH=file_buf[24];
+
+    			IXL=file_buf[25];
+    			IXH=file_buf[26];
+
+    			if(file_buf[27]==0)
+    			{
+    				IFF1=IFF2=INT_mask=0;
+    			}
+    			else
+    			{
+    				IFF1=IFF2=1;
+    			}
+
+    			if((file_buf[29]&0x07)==2)
+    			{
+    				IM=2;
+    			}
+    			else
+    			{
+    				IM=0;
+    			}
+
+    			if((file_buf[12]&0x20)!=0)
+    			{
+    				//compressed data
+    				file_pointer=0;
+    				memory_pointer=0x4000;
+
+    	    		res=f_read(&SDFile, file_buf, 0xff, (void*)&total_read_byte);
+
+    	    		if(res!=FR_OK)
+    	    		{
+    	    			Error_Handler();
+    	    		}
+
+    	    		while (1)
+    	    		{
+    	    			memory[memory_pointer]=Next_Byte_File();
+    	    			memory_pointer++;
+
+						if (memory[memory_pointer-1]==0xed)
+						{
+	    	    			memory[memory_pointer]=Next_Byte_File();
+	    	    			memory_pointer++;
+
+	    	    			if (memory[memory_pointer-1]==0xed)
+	    	    			{
+
+								memory_pointer-=2;
+
+								uint8_t compression_count;
+								uint8_t compression_number;
+								uint8_t compression_value;
+
+								compression_number=Next_Byte_File();
+
+								if ((compression_number==0)&&(memory[memory_pointer-1]==0))
+								{
+									//end file
+					    			HAL_GPIO_WritePin(GPIOB, LED_red_Pin, GPIO_PIN_SET);
+					    			f_close(&SDFile);
+					    			zx80_Init();
+								}
+
+
+								compression_value=Next_Byte_File();
+								for (compression_count=0; compression_count<compression_number; compression_count++)
+								{
+									memory[memory_pointer+compression_count]=compression_value;
+								}
+								memory_pointer=memory_pointer+compression_number;
+	    	    			}
+						}
+    	    		}
+    			}
+    			else
+    			{
+    				//uncompressed data
+    				Error_Handler();
+    			}
+
+
+    			HAL_GPIO_WritePin(GPIOB, LED_red_Pin, GPIO_PIN_SET);
+    			f_close(&SDFile);
+    			zx80_Init();
+    		}
+    	}
+    }
+}
 
 
 void zx80_Init(void)
@@ -64,7 +250,7 @@ void zx80_Init(void)
 		memory[count]=ROM[count];
 	}
 
-	zx80_Reset();
+	//zx80_Reset();
 
 	HAL_SuspendTick();//Disable SysTick Interrupt
 

@@ -8,7 +8,7 @@
  *
  */
 
-uint8_t memory[0x10000];
+uint8_t memory[0x10004];
 
 /*original ROM Spectrum 48*/
 uint8_t const ROM[16384]={

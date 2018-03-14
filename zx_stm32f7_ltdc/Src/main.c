@@ -125,24 +125,7 @@ int main(void)
   /* USER CODE BEGIN 2 */
 
   //zx80_Init();
-
-if(f_mount(&SDFatFS, (TCHAR const*)SDPath, 0) != FR_OK)
-    {
-      Error_Handler();
-    }
-    else
-    {
-    	//if(f_open(&SDFile, "batty.z80", FA_READ) != FR_OK)
-    	if(f_open(&SDFile, "mywrite.txt", FA_CREATE_ALWAYS | FA_WRITE) != FR_OK)
-    	{
-    		Error_Handler();
-    	}
-    	else
-    	{
-    		HAL_GPIO_WritePin(GPIOB, LED_red_Pin, GPIO_PIN_SET);
-    		f_close(&SDFile);
-    	}
-    }
+  zx80_load();
 
   /* USER CODE END 2 */
 

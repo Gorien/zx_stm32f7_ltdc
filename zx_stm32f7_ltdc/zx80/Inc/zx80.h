@@ -14,7 +14,7 @@
 #define INC_Z80_H_
 
 extern uint8_t screen_RAM [6144];
-extern uint8_t memory[0x10000];
+extern uint8_t memory[0x10004];
 extern uint8_t const ROM[16384];
 extern uint8_t INT_SCR;
 extern uint8_t port_rf;
@@ -29,6 +29,7 @@ void zx80_Init(void);
 void zx80_Reset(void);
 uint8_t zx80_Run(void);
 void zx80_screen(void);
+void zx80_load(void);
 
 void poke(uint16_t addr, uint8_t value);
 uint8_t peek(uint16_t addr);
